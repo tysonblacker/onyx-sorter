@@ -195,9 +195,8 @@ class Statement
         @checkin_date = Date.strptime(line[61..70], '%m/%d/%y')
         @checkout_date = @checkin_date + @room_nights
       rescue Exception => e  
+        puts "Error Onyx line"
         puts e.message
-        puts e.backtrace
-        puts "error with a line in onyx file" 
         @checkin_date = Date.strptime("01/01/70", '%m/%d/%y')
         @checkout_date = @checkin_date + @room_nights
         puts line
@@ -255,7 +254,7 @@ class Statement
       rest = line[0..-5]
       space_split = rest.split(" ")
       @tax_amount = space_split[-1]
-      puts @tax_amount
+      #puts @tax_amount
       net_gst = space_split[-2]
       @gross_commission = net_gst.to_f
       @confirmation_number = line[/#{Regexp.escape(dates)}(.*?)#{Regexp.escape(net_gst)}/m, 1]
@@ -524,7 +523,7 @@ end
 
 
 def read_onyx_file(filename)
-  
+  puts "Started reading Onyx file"
   data = File.read filename
 
   statements = []
@@ -564,7 +563,7 @@ def read_onyx_file(filename)
 
   end
   puts
-  puts "Total total entries in onyx file: #{onyx_count}"
+  puts "Total entries in onyx file: #{onyx_count}"
   statements
 end
 
@@ -677,7 +676,7 @@ def read_medina_file(filename)
   statements = []
 
   lines = text.split("\n")
-  puts lines
+  #puts lines
 
   begin
     payment_date = Date.strptime((lines[14].strip), '%d/%m/%Y')
@@ -858,13 +857,13 @@ def parse_files
   #segments.concat(read_mos_segments())
   segments.concat(read_mos_commissions(statement_dir))
   segments.concat(read_sabre_segments())
-  puts segments.count
+  puts "Total segment count:  #{segments.count}"
   
   statements = []
-  # Collect statemente from the various providers
-  statements.concat(read_medina_files(statement_dir))
+  # Collect statement from the various providers
+  #statements.concat(read_medina_files(statement_dir))
   statements.concat(read_onyx_files(statement_dir))
-  statements.concat(read_tacs_files(statement_dir))
+  #statements.concat(read_tacs_files(statement_dir))
 
   match_ss(segments, statements)
 
