@@ -98,9 +98,6 @@ class Segment
       @hotel_id = (row[header['Hotel Id']] || "").strip
 
     end
-
- 
-
   end
 
   def get_array
@@ -183,9 +180,7 @@ class Statement
         @agency = line[34..43].strip.upcase
         @confirmation_number = line[44..54].strip.upcase
         @src = line[56..59].strip.upcase
-        @checkin_date = Date.strptime(line[61..70], '%m/%d/%y')
         @room_nights = line[71..77].strip.to_i
-        @checkout_date = checkin_date + room_nights
         @status = line[79..86].strip
         @revenue = line[96..103].gsub(/[^\d\.]/,'')
         @revenue = revenue.to_f
@@ -197,12 +192,18 @@ class Statement
         @commission_paid_aud = line[161..-1].gsub(/[^\d\.]/,'').strip.to_f
         @collector_commission = @commission_paid_aud * 0.12
         @commission_less_collector = @commission_paid_aud * 0.88
-      rescue
+        @checkin_date = Date.strptime(line[61..70], '%m/%d/%y')
+        @checkout_date = @checkin_date + @room_nights
+      rescue Exception => e  
+        puts e.message
+        puts e.backtrace
         puts "error with a line in onyx file" 
+        @checkin_date = Date.strptime("01/01/70", '%m/%d/%y')
+        @checkout_date = @checkin_date + @room_nights
         puts line
       end
 
-      #puts @name, @agency, @reference, @src
+      #puts @confirmation_number, @guest_name, @src
     end
 
     if type == "tacs"
@@ -457,7 +458,7 @@ def read_mos_commissions(statement_dir)
       #puts segment_headers
     end
     seg = Segment.new("mos_commissions", row, segment_headers)
-    puts seg.get_array
+    #puts seg.get_array
     segments << seg
   end
   end
@@ -858,11 +859,9 @@ def parse_files
   segments.concat(read_mos_commissions(statement_dir))
   segments.concat(read_sabre_segments())
   puts segments.count
- 
-  #statement_dir = "./small_files"
-  #statement_dir = "./Collectors"
   
   statements = []
+  # Collect statemente from the various providers
   statements.concat(read_medina_files(statement_dir))
   statements.concat(read_onyx_files(statement_dir))
   statements.concat(read_tacs_files(statement_dir))
